@@ -15,22 +15,19 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.lang.ref.WeakReference;
+
 public class AccelerometerActivity extends AppCompatActivity implements SensorEventListener {
 
-    private TextView status;
+    private TextView statusMessage;
     private TextView accelerometer_x, accelerometer_y, accelerometer_z;
 
-    private ImageView[] imageViews = new ImageView[4];
-    private int[] greenImages = {R.drawable.greenup, R.drawable.greendown, R.drawable.greenleft, R.drawable.greenright};
-    private int[] whiteImages = {R.drawable.whiteup, R.drawable.whitedown, R.drawable.whiteleft, R.drawable.whiteright};
+    private ImageView[] arrows = new ImageView[4];
+    private int[] greenArrows = {R.drawable.greenup, R.drawable.greendown, R.drawable.greenleft, R.drawable.greenright};
+    private int[] whiteArrow = {R.drawable.whiteup, R.drawable.whitedown, R.drawable.whiteleft, R.drawable.whiteright};
 
-    // C - Center
-    // L - Left
-    // U - Up
-    // R - Right
-    // D - Down
-    // K - Ok
-    // B - Back
+    // C - Center,   L - Left,   U - Up,   R - Right,   D - Down
+    // K - OK,  B - Back
     private char new_x = 'C', new_y = 'C';
     private char old_x = 'C', old_y = 'C';
 
@@ -62,36 +59,35 @@ public class AccelerometerActivity extends AppCompatActivity implements SensorEv
         serverIP = intent.getStringExtra("serverIP");
         serverPort = intent.getIntExtra("serverPort", 1234);
 
-        status = findViewById(R.id.tekst);
+        statusMessage = findViewById(R.id.tekst);
         accelerometer_x = findViewById(R.id.xPozicija);
         accelerometer_y = findViewById(R.id.yPozicija);
         accelerometer_z = findViewById(R.id.zPozicija);
 
-        imageViews[0] = findViewById(R.id.upArrowIV);
-        imageViews[1] = findViewById(R.id.downArrowIV);
-        imageViews[2] = findViewById(R.id.leftArrowIV);
-        imageViews[3] = findViewById(R.id.rightArrowIV);
+        arrows[0] = findViewById(R.id.upArrowIV);
+        arrows[1] = findViewById(R.id.downArrowIV);
+        arrows[2] = findViewById(R.id.leftArrowIV);
+        arrows[3] = findViewById(R.id.rightArrowIV);
 
         // Get Accelerometer
         SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_GAME);
 
-        new ConnectTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, "");
-        Toast.makeText(AccelerometerActivity.this, "Connection established!", Toast.LENGTH_SHORT).show();
-
+        new EstablishConnection().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, "");
+        Toast.makeText(AccelerometerActivity.this, "Uspješno povezano!", Toast.LENGTH_SHORT).show();
 
         findViewById(R.id.okButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new SendMessageTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 'K');
+                new SendMessageToServer(AccelerometerActivity.this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 'K');
             }
         });
 
         findViewById(R.id.backButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new SendMessageTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 'B');
+                new SendMessageToServer(AccelerometerActivity.this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 'B');
             }
         });
     }
@@ -107,27 +103,27 @@ public class AccelerometerActivity extends AppCompatActivity implements SensorEv
         if (x > -3.0 && x < 3.0 && y > -2.5 && y < 2.5) {
             new_x = new_y = 'C';
             if (new_x != old_x || new_y != old_y)
-                new SendMessageTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new_x);
-            status.setText("Centar");
+                new SendMessageToServer(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new_x);
+            statusMessage.setText("Centar");
             updateArrows(Position.CENTER);
         } else if (Math.abs(x) > Math.abs(y)) {
             if (x < -3.0) {
                 updateAndSend('U', true);
-                status.setText("Gore");
+                statusMessage.setText("Gore");
                 updateArrows(Position.UP);
             } else if (x > 3.0) {
                 updateAndSend('D', true);
-                status.setText("Dolje");
+                statusMessage.setText("Dolje");
                 updateArrows(Position.DOWN);
             }
         } else {
             if (y > 2.5) {
                 updateAndSend('R', false);
-                status.setText("Desno");
+                statusMessage.setText("Desno");
                 updateArrows(Position.RIGHT);
             } else if (y < -2.5) {
                 updateAndSend('L', false);
-                status.setText("Lijevo");
+                statusMessage.setText("Lijevo");
                 updateArrows(Position.LEFT);
             }
         }
@@ -142,40 +138,45 @@ public class AccelerometerActivity extends AppCompatActivity implements SensorEv
     }
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-    }
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
     void updateAndSend(char data, boolean upOrDown) {
         if (upOrDown) {
             new_x = data;
             if (new_x != old_x)
-                new SendMessageTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new_x);
+                new SendMessageToServer(AccelerometerActivity.this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new_x);
         } else {
             new_y = data;
             if (new_y != old_y)
-                new SendMessageTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new_y);
+                new SendMessageToServer(AccelerometerActivity.this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new_y);
         }
     }
 
     private void updateArrows(Position pos) {
-        for (int i = 0; i < imageViews.length; i++)
+        for (int i = 0; i < arrows.length; i++)
             if (i == pos.getValue())
-                imageViews[i].setImageResource(greenImages[i]);
+                arrows[i].setImageResource(greenArrows[i]);
             else
-                imageViews[i].setImageResource(whiteImages[i]);
+                arrows[i].setImageResource(whiteArrow[i]);
     }
 
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        new DisconnectTask().execute();
+        new CloseConnection().execute();
     }
 
-    public static class SendMessageTask extends AsyncTask<Character, Void, Void> {
+    public static class SendMessageToServer extends AsyncTask<Character, Void, Void> {
+        WeakReference<AccelerometerActivity> accelerometerActivity;
+
+        SendMessageToServer(AccelerometerActivity accelerometerActivity) {
+            this.accelerometerActivity = new WeakReference<>(accelerometerActivity);
+        }
 
         @Override
         protected Void doInBackground(Character... params) {
-            tcpClient.sendMessage(params[0]);
+            if (!accelerometerActivity.get().isFinishing())
+                tcpClient.sendMessage(params[0]);
             return null;
         }
 
@@ -186,7 +187,7 @@ public class AccelerometerActivity extends AppCompatActivity implements SensorEv
     }
 
 
-    public static class ConnectTask extends AsyncTask<String, String, TCPClient> {
+    public static class EstablishConnection extends AsyncTask<String, String, TCPClient> {
 
         @Override
         protected TCPClient doInBackground(String... message) {
@@ -207,7 +208,7 @@ public class AccelerometerActivity extends AppCompatActivity implements SensorEv
         }
     }
 
-    public static class DisconnectTask extends AsyncTask<Void, Void, Void> {
+    public static class CloseConnection extends AsyncTask<Void, Void, Void> {
 
         @Override
         protected Void doInBackground(Void... voids) {

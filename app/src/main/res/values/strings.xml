@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">MazeBall 1.0</string>
+    <string name="port">Port:</string>
+    <string name="server_ip">Server IP:</string>
+    <string name="konektuj_se">Konektuj se</string>
+    <string name="welcome">Dobrodošli u MazeBall !</string>
+    <string name="unesite_broj_porta">Unesite broj porta</string>
+    <string name="unesite_ip_adresu_servera">Unesite IP adresu servera</string>
+    <string name="okvir">Okvir</string>
+    <string name="up_arrow">Up arrow</string>
+    <string name="down_arrow">down_arrow</string>
+    <string name="left_arrow">left_arrow</string>
+    <string name="right_arrow">right_arrow</string>
+    <string name="nazad">Nazad</string>
+    <string name="akcelerometar">Akcelerometar:</string>
+    <string name="etf_sarajevo_2019">ETF Sarajevo, 2019</string>
 </resources>

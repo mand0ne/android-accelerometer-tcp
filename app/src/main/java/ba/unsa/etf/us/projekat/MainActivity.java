@@ -40,9 +40,9 @@ public class MainActivity extends AppCompatActivity {
                     intent.putExtra("serverPort", serverPort);
                     startActivity(intent);
                 } else {
-                    Toast.makeText(MainActivity.this, "IP Address/Port number is not valid and/or reachable!", Toast.LENGTH_SHORT).show();
-                    et_serverIP.setError("Insert again!");
-                    et_serverPort.setError("Insert again!");
+                    Toast.makeText(MainActivity.this, "IP Adresa/Port nisu validni i/ili dostižni!", Toast.LENGTH_SHORT).show();
+                    et_serverIP.setError("Unesite ponovo!");
+                    et_serverPort.setError("Unesite ponovo!");
                 }
             }
         });
@@ -56,15 +56,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean inputIsValid() {
-        if (Patterns.IP_ADDRESS.matcher(serverIP).matches() && serverPort > 0 && serverPort < 65535) {
-            try {
-                serverIP = et_serverIP.getText().toString();
-                serverPort = Integer.valueOf(et_serverPort.getText().toString());
+        serverIP = et_serverIP.getText().toString();
+        serverPort = Integer.valueOf(et_serverPort.getText().toString());
 
+        try {
+            if (Patterns.IP_ADDRESS.matcher(serverIP).matches() && serverPort > 0 && serverPort < 65535)
                 return serverIsReachable(serverIP, serverPort);
-            } catch (Exception e) {
-                return false;
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         return false;
