@@ -1,11 +1,10 @@
 package ba.unsa.etf.us.projekat;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Patterns;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -20,7 +19,7 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText et_serverIP;
     private EditText et_serverPort;
-    private Button connectButton;
+
     private String serverIP;
     private Integer serverPort;
 
@@ -31,20 +30,19 @@ public class MainActivity extends AppCompatActivity {
 
         et_serverIP = findViewById(R.id.et_serverIP);
         et_serverPort = findViewById(R.id.et_serverPort);
-        connectButton = findViewById(R.id.connectButton);
 
-        connectButton.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.connectButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (validanUnos()) {
-                    Intent intent = new Intent(MainActivity.this, AkcelerometarActivity.class);
+                if (inputIsValid()) {
+                    Intent intent = new Intent(MainActivity.this, AccelerometerActivity.class);
                     intent.putExtra("serverIP", serverIP);
                     intent.putExtra("serverPort", serverPort);
-                    MainActivity.this.startActivity(intent);
+                    startActivity(intent);
                 } else {
-                    Toast.makeText(MainActivity.this, "IP Adresa/Port nisu ispravni ili nisu dostižni!", Toast.LENGTH_SHORT).show();
-                    et_serverIP.setError("Unesite ponovo!");
-                    et_serverPort.setError("Unesite ponovo!");
+                    Toast.makeText(MainActivity.this, "IP Address/Port number is not valid and/or reachable!", Toast.LENGTH_SHORT).show();
+                    et_serverIP.setError("Insert again!");
+                    et_serverPort.setError("Insert again!");
                 }
             }
         });
@@ -57,22 +55,22 @@ public class MainActivity extends AppCompatActivity {
         et_serverPort.setError(null);
     }
 
-    boolean validanUnos() {
-        try {
-            serverIP = et_serverIP.getText().toString();
-            serverPort = Integer.valueOf(et_serverPort.getText().toString());
+    private boolean inputIsValid() {
+        if (Patterns.IP_ADDRESS.matcher(serverIP).matches() && serverPort > 0 && serverPort < 65535) {
+            try {
+                serverIP = et_serverIP.getText().toString();
+                serverPort = Integer.valueOf(et_serverPort.getText().toString());
 
-            if (!isPortOpen(serverIP, serverPort))
+                return serverIsReachable(serverIP, serverPort);
+            } catch (Exception e) {
                 return false;
-        } catch (Exception e) {
-            return false;
+            }
         }
 
-        return Patterns.IP_ADDRESS.matcher(serverIP).matches()
-                && serverPort > 0 && serverPort < 65535;
+        return false;
     }
 
-    public static boolean isPortOpen(final String ip, final int port) {
+    private boolean serverIsReachable(final String ip, final int port) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<Boolean> result = executor.submit(new Callable<Boolean>() {
             public Boolean call() {
@@ -93,5 +91,4 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
     }
-
 }

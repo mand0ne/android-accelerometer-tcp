@@ -11,21 +11,24 @@ import java.net.InetAddress;
 import java.net.Socket;
 
 class TCPClient {
+
+    // Server info
     private String SERVER_IP;
     private int SERVER_PORT;
 
-    // used to send messages
+    // Used to send messages
     private PrintWriter outBuffer;
 
-    // sends message received notifications
+    // Sends message received notifications
     private OnMessageReceived messageListener;
 
-    // while this is true, the server will continue running
+    // While this is true, the server will continue running
     private boolean running = false;
 
-    // used to read messages from the server
+    // Used to read messages from the server
     private BufferedReader inBuffer;
-    // message from the server
+
+    // Message from the server
     private String serverMessage;
 
     /**
@@ -50,7 +53,7 @@ class TCPClient {
     }
 
     /**
-     * Close the connection and release the member
+     * Close the connection and release
      **/
     void stopClient() {
         running = false;
@@ -73,27 +76,28 @@ class TCPClient {
             try (Socket socket = new Socket(serverAddr, SERVER_PORT)) {
                 outBuffer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
                 inBuffer = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
                 while (running) {
                     serverMessage = inBuffer.readLine();
                     if (serverMessage != null && messageListener != null)
                         messageListener.messageReceived(serverMessage);
                 }
-            } catch (Exception e) {
-                Log.e("TCP", "S: Error", e);
-            }
-            //the socket must be closed. It is not possible to reconnect to this socket
-            // after it is closed, which means a new socket instance has to be created.
 
+            } catch (Exception e) {
+                Log.e("TCPClient ", "Exception: ", e);
+            }
+
+            // The socket must be closed. It is not possible to reconnect to this socket
+            // after it is closed, which means a new socket instance has to be created.
         } catch (Exception e) {
-            Log.e("TCP", "C: Error", e);
+            Log.e("TCPClient ", "Exception: ", e);
         }
     }
 
-    //Declare the interface. The method messageReceived(String message) will must be implemented in the Activity
-    //class at on AsyncTask doInBackground
+    // Declare the interface. The method messageReceived(String message) must be implemented in the Activity
+    // class at on AsyncTask doInBackground
     public interface OnMessageReceived {
         void messageReceived(String message);
     }
-
 }
 
