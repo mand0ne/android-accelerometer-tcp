@@ -1,3 +1,3 @@
 #### Controller for MazeBall game. 
 ***
-Check: https://github.com/lmehmedagi1/mazeball-game
+Please check: https://github.com/mand0ne/mazeball-game
